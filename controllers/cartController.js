@@ -4,12 +4,26 @@ const Cart = require("../models/Cart");
 const { STATUS_CODE } = require("../constants/statusCode");
 
 exports.addProductToCart = (request, response) => {
-  Product.add(request.body);
-  Cart.add(request.body.name);
+  const productData = request.body;
 
-  response.status(STATUS_CODE.FOUND).redirect("/products/new");
+  Product.add(productData)
+    .then(() => {
+      return Cart.add(productData.name);
+    })
+    .then(() => {
+      response.status(STATUS_CODE.FOUND).redirect("/products/new");
+    })
+    .catch((error) => {
+      console.error("Error adding product to cart:", error);
+      response.status(500).send("An error occurred");
+    });
 };
 
-exports.getProductsCount = () => {
-  return Cart.getProductsQuantity();
+exports.getProductsCount = async () => {
+  try {
+    return await Cart.getProductsQuantity();
+  } catch (error) {
+    console.error("Error getting product count:", error);
+    return 0;
+  }
 };
